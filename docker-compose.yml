@@ -1,33 +1,33 @@
 version: "3.9"
 services:
-  rundeck:
-    image: rundeck/rundeck:3.4.9
-    container_name: bfs_rundeck
-    restart: always
-    volumes:
-      - /tmp/rundeck/projects:/var/rundeck/projects
-      - /tmp/rundeck/var:/var/lib/rundeck/var
-      - /tmp/rundeck/logs:/var/lib/rundeck/logs
-      - /tmp/rundeck/data:/var/lib/rundeck/data
-      - /run/docker.sock:/var/run/docker.sock
-    environment:
-      - RUNDECK_ADMIN_NAME=admin
-      - RUNDECK_ADMIN_PASS=admin
-      - RUNDECK_USER_NAME=user
-      - RUNDECK_USER_PASS=user
-      - RUNDECK_JVM_XMX=1024m
-      - RUNDECK_JVM_XMS=256m
-      - RUNDECK_JVM_XX_MAX_PERM_SIZE=256m
-      - RUNDECK_LOGLEVEL_DEFAULT=INFO
-      - RUNDECK_GRAILS_SERVER_URL=http://localhost:4440
-      - FRAMEWORK_SERVER_NAME=localhost
-      - FRAMEWORK_SERVER_HOSTNAME=localhost
-      - FRAMEWORK_SERVER_PORT=4440
-      - FRAMEWORK_SERVER_URL=http://localhost:4440
-      - FRAMEWORK_SERVER_USERNAME=admin
-      - FRAMEWORK_SERVER_PASSWORD=admin
-    ports:
-      - 4440:4440
+  # rundeck:
+  #   image: rundeck/rundeck:3.4.9
+  #   container_name: bfs_rundeck
+  #   restart: always
+  #   volumes:
+  #     - /tmp/rundeck/projects:/var/rundeck/projects
+  #     - /tmp/rundeck/var:/var/lib/rundeck/var
+  #     - /tmp/rundeck/logs:/var/lib/rundeck/logs
+  #     - /tmp/rundeck/data:/var/lib/rundeck/data
+  #     - /run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - RUNDECK_ADMIN_NAME=admin
+  #     - RUNDECK_ADMIN_PASS=admin
+  #     - RUNDECK_USER_NAME=user
+  #     - RUNDECK_USER_PASS=user
+  #     - RUNDECK_JVM_XMX=1024m
+  #     - RUNDECK_JVM_XMS=256m
+  #     - RUNDECK_JVM_XX_MAX_PERM_SIZE=256m
+  #     - RUNDECK_LOGLEVEL_DEFAULT=INFO
+  #     - RUNDECK_GRAILS_SERVER_URL=http://localhost:4440
+  #     - FRAMEWORK_SERVER_NAME=localhost
+  #     - FRAMEWORK_SERVER_HOSTNAME=localhost
+  #     - FRAMEWORK_SERVER_PORT=4440
+  #     - FRAMEWORK_SERVER_URL=http://localhost:4440
+  #     - FRAMEWORK_SERVER_USERNAME=admin
+  #     - FRAMEWORK_SERVER_PASSWORD=admin
+  #   ports:
+  #     - 4440:4440
 
   redis:
     image: redis:5.0
@@ -73,3 +73,21 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: "root"
       MONGO_INITDB_ROOT_PASSWORD: "password"
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'k5451408_rahayu'
+      MYSQL_USER: 'stationery'
+      MYSQL_PASSWORD: 'stationery'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - ./mysql/db:/var/lib/mysql
+
+volumes:
+  my-db:
