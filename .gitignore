@@ -2,6 +2,8 @@
 /zookeeper/
 /mongo/
 /mysql/
-
-
+/fake-gcs/
+/postgres/
+/kafka-0/
+/zookeeper-0/
 

@@ -35,6 +35,15 @@ services:
     ports:
       - "6379:6379"
 
+  redis2:
+    image: 'bitnami/redis:latest'
+    container_name: redis_ms_account
+    environment:
+      - REDIS_PORT_NUMBER=13158
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "13158:13158"
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.3
     container_name: zookeeper_localhost
@@ -66,6 +75,58 @@ services:
       KAFKA_HEAP_OPTS: -Xmx512M -Xms512M
     ports:
       - "9092:9092"
+
+  zookeeper-0:
+    image: bitnami/zookeeper:3.5
+    container_name: zookeeper
+    ports:
+      - "2182:2182"
+      - "3888:3888"
+    networks:
+      - kafkanet
+    environment:
+      - ZOO_ENABLE_AUTH=yes
+      - ZOO_SERVER_USERS=admin
+      - ZOO_SERVER_PASSWORDS=password
+      - ZOO_PORT_NUMBER=2182
+    volumes:
+      - ./zookeeper-0/data:/bitnami/zookeeper
+
+  kafka-0:
+    image: bitnami/kafka:2.8.1
+    container_name: kafka-0
+    expose:
+      - 9092
+      - 9093
+      - 9094
+    ports:
+      - "29092:29092"
+    networks:
+      - kafkanet
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2182
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,SSL:SSL,SASL_SSL:SASL_SSL,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,SSL://:9093,SASL_SSL://:9094,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka-0:9092,SSL://kafka-0:9093,SASL_SSL://kafka-0:9094,EXTERNAL://localhost:29092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=SSL
+      - KAFKA_CFG_SSL_KEYSTORE_LOCATION=/opt/bitnami/kafka/config/certs/kafka.keystore.jks
+      - KAFKA_CFG_SSL_KEYSTORE_PASSWORD=42ae178c3cb34bf88a0c73786735bced
+      - KAFKA_CFG_SSL_KEY_PASSWORD=42ae178c3cb34bf88a0c73786735bced
+      - KAFKA_CFG_SSL_TRUSTSTORE_LOCATION=/opt/bitnami/kafka/config/certs/kafka.truststore.jks
+      - KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD=0111351f4c0d4ad3b3a928b437666e41
+      - KAFKA_CFG_SASL_ENABLED_MECHANISMS=SCRAM-SHA-256
+      - KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL=SCRAM-SHA-256
+    volumes:
+      - ./kafka-0/data:/bitnami/kafka
+      - ./aiven/client.keystore-17882158962488103631.p12:/opt/bitnami/kafka/config/certs/kafka.keystore.jks:ro
+      - ./aiven/client.truststore-7455930212614730998.jks:/opt/bitnami/kafka/config/certs/kafka.truststore.jks:ro
+      - ./kafka_jaas.conf:/opt/bitnami/kafka/config/kafka_jaas.conf:ro
+      - ./client.properties:/opt/bitnami/kafka/config/client.properties:ro
+      - ./command.properties:/opt/bitnami/kafka/config/command.properties:ro
+    depends_on:
+      - zookeeper-0
 
   mongo:
     image: mongo
@@ -141,9 +202,36 @@ services:
     volumes:
       - ./mysql/db:/var/lib/mysql
 
-volumes:
-  my-db:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: loan_takeover_db
+    volumes:
+      - ./postgres/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
-# networks:
-#   mongors-network:
-#     driver: bridge
+  storage:
+    container_name: fake-gcs-server
+    image: fsouza/fake-gcs-server
+    restart: always
+    ports:
+      - 8083:8083
+    volumes:
+      - ./fake-gcs/data:/data
+    command: ["-scheme", "http", "-port", "8083", "-external-url", "http://[::]:8083"]
+    networks:
+      - storage-network
+
+# volumes:
+#   my-db:
+
+networks:
+  kafkanet:
+    name: kafka-network
+  # mongors-network:
+  #   driver: bridge
+  storage-network:
+    driver: bridge
